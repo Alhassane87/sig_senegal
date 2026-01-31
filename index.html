@@ -6,6 +6,10 @@
         <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
         <meta name="mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-capable" content="yes">
+        <link rel="manifest" href="manifest.json">
+        <meta name="theme-color" content="#27ae60">
+        <link rel="icon" href="images/icon-192.svg" type="image/svg+xml">
+        <link rel="apple-touch-icon" href="images/icon-192.svg">
         <link rel="stylesheet" href="css/leaflet.css">
         <link rel="stylesheet" href="css/L.Control.Layers.Tree.css">
         <link rel="stylesheet" href="css/L.Control.Locate.min.css">
@@ -1106,6 +1110,30 @@
         .smartsearch-clear-icon.show {
             display: flex;
         }
+
+        /* PWA and géolocalisation buttons */
+        #geo-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 8px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            background: #fff;
+            color: #27ae60;
+            border: 1px solid rgba(39,174,96,0.15);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+            cursor: pointer;
+        }
+        #geo-btn.active {
+            background: #27ae60;
+            color: #fff;
+        }
+        #install-btn {
+            display: none;
+            background: #fff;
+            color: #27ae60;
+        }
         </style>
         <title>SIG - Cartographie administrative du Sénégal</title>
     </head>
@@ -1135,6 +1163,9 @@
                 </button>
                 <button class="navbar-btn" onclick="toggleRightSidebar()">
                     <i class="fas fa-sliders-h"></i> Fonds
+                </button>
+                <button id="install-btn" class="navbar-btn" onclick="promptInstall()" style="display:none;">
+                    <i class="fas fa-download"></i> Installer
                 </button>
             </div>
         </nav>
@@ -2116,6 +2147,8 @@
         var hash = new L.Hash(map);
         map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
         var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
+
+        if (window.initGeolocation) { try { window.initGeolocation(map); } catch(e) { console.warn('initGeolocation error', e); } }
         
         function removeEmptyRowsFromPopupContent(content, feature) {
          var tempDiv = document.createElement('div');
@@ -3377,6 +3410,42 @@
                 showModal('accueil');
             }, 1500);
         }
+        </script>
+
+        <script src="js/geolocation.js"></script>
+        <script>
+        // Service worker registration
+        if ('serviceWorker' in navigator) {
+          window.addEventListener('load', function() {
+            navigator.serviceWorker.register('/sw.js').then(function(reg) {
+              console.log('Service worker registered.', reg);
+            }).catch(function(err) {
+              console.warn('Service worker registration failed:', err);
+            });
+          });
+        }
+
+        // Installation prompt handling
+        let deferredPrompt;
+        const installBtn = document.getElementById('install-btn');
+        function promptInstall() {
+          if (!deferredPrompt) return;
+          deferredPrompt.prompt();
+          deferredPrompt.userChoice.then(function(choiceResult){
+            deferredPrompt = null;
+            installBtn.style.display = 'none';
+          });
+        }
+        window.addEventListener('beforeinstallprompt', (e) => {
+          e.preventDefault();
+          deferredPrompt = e;
+          if (installBtn) installBtn.style.display = 'inline-flex';
+          console.log('beforeinstallprompt fired');
+        });
+        window.addEventListener('appinstalled', (evt) => {
+          console.log('App installed');
+          if (installBtn) installBtn.style.display = 'none';
+        });
         </script>
     </body>
 </html>
