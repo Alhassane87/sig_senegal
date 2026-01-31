@@ -389,6 +389,20 @@
             #openLegendBtn { right:16px; bottom:16px; }
         }
 
+        /* Install floating button */
+        #openInstallBtn { position: absolute; bottom: 20px; left: 18px; z-index: 700; width:44px; height:44px; border-radius:8px; display:flex; align-items:center; justify-content:center; background:#fff; color:#27ae60; border:1px solid rgba(39,174,96,0.12); box-shadow: 0 6px 20px rgba(39,174,96,0.06); }
+        #openInstallBtn.hidden { display:none; }
+
+        /* Legend details */
+        .legend-details { display:none; margin-top:8px; padding:10px; background:#f7fff7; border-radius:6px; border:1px solid #eaf6ec; font-size:13px; color:#3a4b3a; }
+        .legend-details .prop-row { display:flex; gap:10px; padding:6px 0; border-bottom:1px dashed #eaf6ec; }
+        .legend-details .prop-row:last-child { border-bottom:none; }
+        .legend-item.expanded { box-shadow: 0 12px 32px rgba(12,74,26,0.07); transform: translateY(-6px); }
+        .legend-count { background:#eef9ee; padding:2px 6px; border-radius:12px; font-size:12px; color:#2b5a2b; border:1px solid #e2f2e2; }
+        .details-btn { background:transparent; border:none; color:#27ae60; cursor:pointer; padding:6px; border-radius:6px; }
+        .details-btn:hover { background:rgba(39,174,96,0.06); }
+
+
         /* Coordinates Panel */
         .coords-panel {
             position: absolute;
@@ -1283,6 +1297,8 @@
 
         <!-- Quick legend button (mobile) -->
         <button id="openLegendBtn" class="navbar-btn" title="Légende" aria-label="Ouvrir la légende"><i class="fas fa-book"></i></button>
+        <!-- Floating install button (visible when install prompt available) -->
+        <button id="openInstallBtn" class="navbar-btn hidden" title="Installer l'application" aria-label="Installer l'application"><i class="fas fa-download"></i></button>
 
         <!-- Scale Panel -->
         <div class="scale-panel" id="scalePanel">
@@ -3722,8 +3738,185 @@
           e.preventDefault();
           deferredPrompt = e;
           if (installBtn) installBtn.style.display = 'inline-flex';
+          const floatInstall = document.getElementById('openInstallBtn'); if (floatInstall) floatInstall.classList.remove('hidden');
           console.log('beforeinstallprompt fired');
         });
+
+        // Floating install button handler
+        const floatInstall = document.getElementById('openInstallBtn');
+        if (floatInstall) {
+            floatInstall.addEventListener('click', promptInstall);
+        }
+
+        // --- Build a fast index of localities for search ---
+        const localitiesIndex = [];
+        function buildLocalitiesIndex(){
+            try{
+                localitiesIndex.length = 0;
+                const cluster = window['cluster_localites_7'] || window['layer_localites_7'];
+                if (!cluster) return;
+                const layers = (typeof cluster.getLayers === 'function') ? cluster.getLayers() : [];
+                for (let i=0;i<layers.length;i++){
+                    const lyr = layers[i];
+                    let name = (lyr.feature && lyr.feature.properties && (lyr.feature.properties['NOM'] || lyr.feature.properties['name'] || ''));
+                    if (!name && lyr.options && lyr.options.title) name = lyr.options.title;
+                    if (name) {
+                        localitiesIndex.push({name: name.toLowerCase(), displayName: name, layer: lyr, latlng: (lyr.getLatLng ? lyr.getLatLng() : (lyr.getBounds ? lyr.getBounds().getCenter() : null))});
+                    }
+                }
+                console.debug('Localities index built', localitiesIndex.length);
+            }catch(e){ console.warn('buildLocalitiesIndex error', e); }
+        }
+
+        // Build on init and on clusters ready
+        setTimeout(buildLocalitiesIndex, 500);
+        setTimeout(buildLocalitiesIndex, 3000);
+
+        // Matching helper - simple substring (fast)
+        function findLocalities(q, limit){
+            q = q.trim().toLowerCase(); if (!q) return [];
+            const results = [];
+            for (let i=0;i<localitiesIndex.length && results.length < limit;i++){
+                if (localitiesIndex[i].name.indexOf(q) !== -1) results.push(localitiesIndex[i]);
+            }
+            return results;
+        }
+
+        function performSearch(query){
+            const q = (query || '').trim().toLowerCase();
+            const results = [];
+            if (!q) return results;
+
+            const includeLocalities = document.getElementById('filterLocalities') ? document.getElementById('filterLocalities').checked : true;
+            const includeLayers = document.getElementById('filterLayers') ? document.getElementById('filterLayers').checked : true;
+
+            // Search legend layers (cached names) - faster, prefix/suffix match
+            if (includeLayers) {
+                for (let i=0;i<legendData.length && results.length < 20;i++){
+                    const item = legendData[i];
+                    if (item.name.toLowerCase().indexOf(q) !== -1) results.push({type:'layer', name:item.name, id:item.id, layer:item.layer});
+                }
+            }
+
+            // Search prebuilt localities index
+            if (includeLocalities) {
+                const locs = findLocalities(q, 12 - results.length);
+                locs.forEach(l=> results.push({type:'locality', name: l.displayName, layer: l.layer, latlng: l.latlng}));
+            }
+
+            return results;
+        }
+
+        // Render suggestions adjusted to use filters panel
+        function renderSuggestions(results){
+            const container = document.getElementById('searchSuggestions');
+            const list = document.getElementById('searchResultsList');
+            list.innerHTML = '';
+            if (!results || results.length === 0) { container.style.display = 'none'; return; }
+            results.forEach(r => {
+                const div = document.createElement('div');
+                div.className = 'item';
+                const type = document.createElement('span'); type.className='type'; type.textContent = r.type === 'locality' ? 'Localité' : 'Couche';
+                const text = document.createElement('div'); text.style.flex = '1'; text.textContent = r.name;
+                div.appendChild(type);
+                div.appendChild(text);
+                div.addEventListener('click', function(){ handleSuggestionClick(r); container.style.display='none'; });
+                list.appendChild(div);
+            });
+            container.style.display = 'block';
+        }
+
+        // Improve main search initialization: attach filter toggles
+        function enhanceMainSearch(){
+            const input = document.getElementById('mainSearch');
+            const sugg = document.getElementById('searchSuggestions');
+            if (!input) return;
+            const cbLoc = document.getElementById('filterLocalities');
+            const cbLayers = document.getElementById('filterLayers');
+            // default both checked
+            if (cbLoc) cbLoc.checked = true; if (cbLayers) cbLayers.checked = true;
+            // rebuild index when toggles changed
+            if (cbLoc) cbLoc.addEventListener('change', () => { if (cbLoc.checked) setTimeout(buildLocalitiesIndex,200); });
+
+            input.removeEventListener('input', null);
+            input.addEventListener('input', debounce(function(e){ const res = performSearch(e.target.value); renderSuggestions(res); }, 150));
+            input.addEventListener('blur', function(){ setTimeout(()=>{ if (sugg) sugg.style.display='none'; }, 250); });
+            input.addEventListener('focus', function(){ const res = performSearch(input.value); renderSuggestions(res); });
+
+            // keyboard navigation remains
+            input.addEventListener('keydown', function(e){
+                const items = document.querySelectorAll('#searchResultsList .item');
+                if(!items || items.length===0) return;
+                let idx = Array.from(items).findIndex(i => i.classList.contains('active'));
+                if (e.key === 'ArrowDown') { e.preventDefault(); if (idx < items.length-1) idx++; items.forEach(i=>i.classList.remove('active')); items[idx].classList.add('active'); }
+                else if (e.key === 'ArrowUp') { e.preventDefault(); if (idx > 0) idx--; items.forEach(i=>i.classList.remove('active')); items[idx].classList.add('active'); }
+                else if (e.key === 'Enter') { e.preventDefault(); const sel = document.querySelector('#searchResultsList .item.active'); if (sel) sel.click(); }
+            });
+        }
+
+        // --- Legend details expansion ---
+        function populateLegendDetails(item, detailsContainer){
+            detailsContainer.innerHTML = '';
+            try{
+                const lyr = window[item.layer];
+                if (!lyr) { detailsContainer.innerHTML = '<div class="legend-details">Aucun composant disponible</div>'; return; }
+
+                let features = [];
+                if (typeof lyr.getLayers === 'function') {
+                    const layers = lyr.getLayers();
+                    for (let i=0;i<layers.length && features.length < 6;i++){
+                        const l = layers[i];
+                        const props = l.feature && l.feature.properties ? l.feature.properties : (l.options && l.options.properties ? l.options.properties : {});
+                        features.push({name: (props['NOM']||props['name']||props['nom']||'item'), props: props});
+                    }
+                } else if (lyr && Array.isArray(lyr.features)) {
+                    for (let i=0;i<lyr.features.length && i<6;i++){
+                        features.push({name: (lyr.features[i].properties['NOM']||lyr.features[i].properties['name']||'item'), props: lyr.features[i].properties});
+                    }
+                }
+
+                if (features.length === 0) { detailsContainer.innerHTML = '<div class="legend-details">Aucun composant trouvé</div>'; return; }
+
+                const wrapper = document.createElement('div'); wrapper.className='legend-details';
+                features.forEach(f => {
+                    const row = document.createElement('div'); row.className='prop-row';
+                    const title = document.createElement('div'); title.style.fontWeight='600'; title.style.width='140px'; title.textContent = f.name;
+                    const propsDiv = document.createElement('div'); propsDiv.style.flex='1';
+                    const keys = Object.keys(f.props).slice(0,6);
+                    keys.forEach(k => {
+                        const p = document.createElement('div'); p.style.fontSize='12px'; p.textContent = `${k}: ${String(f.props[k]).slice(0,40)}`;
+                        propsDiv.appendChild(p);
+                    });
+                    row.appendChild(title); row.appendChild(propsDiv);
+                    wrapper.appendChild(row);
+                });
+                detailsContainer.appendChild(wrapper);
+
+            }catch(e){ detailsContainer.innerHTML = '<div class="legend-details">Erreur lors du chargement</div>'; }
+        }
+
+        // Attach click for details buttons and toggle expand
+        function attachLegendDetailsListeners(){
+            document.querySelectorAll('.details-btn').forEach(btn => {
+                btn.addEventListener('click', function(e){
+                    const parent = btn.closest('.legend-item');
+                    if (!parent) return;
+                    const did = parent.querySelector('.legend-details');
+                    if (parent.classList.contains('expanded')){
+                        parent.classList.remove('expanded'); if (did) did.style.display='none';
+                    } else {
+                        parent.classList.add('expanded'); if (did) did.style.display='block';
+                        const id = parent.getAttribute('data-id');
+                        const item = legendData.find(it=>it.id===id);
+                        if (item && did) populateLegendDetails(item, did);
+                    }
+                });
+            });
+        }
+
+        // Re-run attachment after legend rendered
+        setInterval(function(){ attachLegendDetailsListeners(); }, 1500);
+
         window.addEventListener('appinstalled', (evt) => {
           console.log('App installed');
           if (installBtn) installBtn.style.display = 'none';
