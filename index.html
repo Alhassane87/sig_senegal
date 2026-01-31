@@ -8,8 +8,10 @@
         <meta name="apple-mobile-web-app-capable" content="yes">
         <link rel="manifest" href="manifest.json">
         <meta name="theme-color" content="#27ae60">
+        <link rel="icon" href="images/icon-192.png" type="image/png">
         <link rel="icon" href="images/icon-192.svg" type="image/svg+xml">
-        <link rel="apple-touch-icon" href="images/icon-192.svg">
+        <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+        <link rel="mask-icon" href="images/icon-192.svg" color="#27ae60">
         <link rel="stylesheet" href="css/leaflet.css">
         <link rel="stylesheet" href="css/L.Control.Layers.Tree.css">
         <link rel="stylesheet" href="css/L.Control.Locate.min.css">
@@ -348,47 +350,43 @@
         }
 
         /* Legend */
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 12px;
-            margin-bottom: 8px;
-            font-size: 13px;
-            border-radius: 4px;
-            transition: all 0.2s ease;
-            background: #f9f9f9;
-            border: 1px solid #e0e0e0;
-        }
+        .legend-panel { background: linear-gradient(180deg,#ffffff, #fbfffb); border-radius: 10px; padding: 8px; box-shadow: 0 6px 24px rgba(12, 74, 26, 0.06); }
+        .legend-header { display:flex; align-items:center; gap:8px; justify-content:space-between; padding: 6px 4px 10px 4px; }
+        .legend-title { font-weight:700; color:#235b30; font-size:14px; display:flex; align-items:center; gap:8px; }
+        .legend-actions { display:flex; align-items:center; gap:6px; }
+        .legend-search { padding:8px 10px; border-radius:8px; border:1px solid #e6f0ea; min-width:160px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+        .legend-pin.active { background:#27ae60; color:#fff; }
+        .legend-collapse { transition: transform 180ms ease; }
+        .legend-items { margin-top:8px; max-height: 48vh; overflow:auto; padding-right:4px; }
 
-        .legend-item:hover {
-            background: #f0fdf4;
-            border-color: #27ae60;
-            box-shadow: 0 2px 4px rgba(46, 204, 113, 0.2);
-        }
+        .legend-item { display:flex; align-items:center; gap:10px; padding:10px; margin-bottom:8px; font-size:13px; border-radius:8px; transition: all 180ms ease; background: #fff; border: 1px solid #e8f2eb; }
+        .legend-item:hover { transform: translateY(-3px); box-shadow: 0 6px 18px rgba(39,174,96,0.06); }
+        .legend-item .legend-left { display:flex; align-items:center; gap:8px; flex-shrink:0; }
+        .legend-item .legend-main { flex:1; display:flex; flex-direction:column; gap:4px; }
+        .legend-item .legend-meta { font-size:12px; color:#6b705c; }
+        .legend-item .legend-actions-item { margin-left:8px; display:flex; gap:6px; }
+        .legend-item .info-btn { background:transparent; border:none; color:#27ae60; cursor:pointer; padding:6px; border-radius:6px; }
+        .legend-item .info-btn:hover { background:rgba(39,174,96,0.08); }
 
-        .legend-item input[type="checkbox"] {
-            cursor: pointer;
-            accent-color: #27ae60;
-            width: 18px;
-            height: 18px;
-            margin: 0;
-            flex-shrink: 0;
-        }
+        .legend-empty { padding:12px; color:#666; text-align:center; }
 
-        .legend-item label {
-            cursor: pointer;
-            margin: 0;
-            flex: 1;
-        }
+        /* Search suggestions (navbar) */
+        .nav-search { position:relative; }
+        .nav-search input { width:220px; padding:8px 12px; border-radius:8px; border:1px solid #e6f0ea; box-shadow:0 2px 8px rgba(0,0,0,0.04); }
+        .search-suggestions { position:absolute; left:0; right:0; top:110%; background:white; border-radius:8px; box-shadow: 0 8px 24px rgba(12,74,26,0.08); max-height:320px; overflow:auto; z-index:1200; }
+        .search-suggestions .item { padding:8px 12px; border-bottom:1px solid #f0f3f0; cursor:pointer; display:flex; align-items:center; gap:8px; }
+        .search-suggestions .item:hover, .search-suggestions .item.active { background:#f0fff4; }
+        .search-suggestions .type { font-size:11px; color:#4a6b4a; border-radius: 6px; padding:2px 6px; border:1px solid #eaf6ec; }
 
-        .legend-symbol {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border-radius: 2px;
-            border: 1px solid #999;
-            flex-shrink: 0;
+        /* Floating legend quick button */
+        #openLegendBtn { position: absolute; bottom:20px; right:18px; z-index:700; width:44px; height:44px; border-radius:8px; display:flex; align-items:center; justify-content:center; background:#fff; color:#27ae60; border:1px solid rgba(39,174,96,0.12); box-shadow: 0 6px 20px rgba(39,174,96,0.06); }
+        #openLegendBtn:hover { transform:translateY(-3px); }
+
+        /* Responsive tweaks */
+        @media (max-width: 768px) {
+            .nav-search input { width: 90vw; max-width:240px; }
+            .legend-items { max-height: 40vh; }
+            #openLegendBtn { right:16px; bottom:16px; }
         }
 
         /* Coordinates Panel */
@@ -1134,6 +1132,37 @@
             background: #fff;
             color: #27ae60;
         }
+
+        /* Responsive mobile styles */
+        @media (max-width: 768px) {
+            .navbar { height: 56px; padding: 0 12px; }
+            .navbar-brand span { font-size: 16px; }
+            .navbar-menu { position: fixed; top: 56px; left: 0; right: 0; background: #fff; z-index: 1100; max-height: 0; overflow: hidden; flex-direction: column; box-shadow: 0 6px 20px rgba(0,0,0,0.15); transform: translateY(-8px); opacity: 0; transition: max-height 300ms ease, transform 240ms cubic-bezier(.2,.8,.2,1), opacity 240ms ease; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; }
+            .navbar-menu a { padding: 14px 16px; border-bottom: 1px solid #f0f0f0; color: #333; }
+            .navbar-menu.mobile-open { max-height: 60vh; transform: translateY(0); opacity: 1; }
+            .navbar-menu li.mobile-close { display:flex; justify-content:flex-end; padding: 8px 12px; border-bottom: 1px solid #eee; }
+            .mobile-only { display: inline-flex; }
+            .navbar-right .navbar-btn { padding: 8px; font-size: 12px; }
+
+            /* Sidebars collapses on mobile */
+            .sidebar-left, .sidebar-right { position: fixed; top: 56px; bottom: 0; width: 0; overflow: hidden; transition: width 0.25s ease; z-index: 100; }
+            .sidebar-left { left: 0; }
+            .sidebar-right { right: 0; }
+            .sidebar-left.collapsed, .sidebar-right.collapsed { width: 0; }
+            .sidebar-left:not(.collapsed) { width: 280px; }
+            .sidebar-right:not(.collapsed) { width: 260px; }
+
+            .container { top: 56px; height: calc(100% - 56px); }
+            #map { height: 100%; }
+
+            #geo-btn { bottom: 80px; left: auto; right: 16px; }
+            #install-btn { right: 16px; display: inline-flex; }
+        }
+
+        /* Desktop: hide mobile-only */
+        @media (min-width: 769px) {
+            .mobile-only { display: none; }
+        }
         </style>
         <title>SIG - Cartographie administrative du Sénégal</title>
     </head>
@@ -1144,7 +1173,13 @@
                 <i class="fas fa-globe"></i>
                 <span>SIG Sénégal</span>
             </div>
-            <ul class="navbar-menu">
+            <button id="mobile-menu-btn" class="navbar-btn mobile-only" onclick="toggleMobileMenu()" aria-label="Ouvrir le menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <ul class="navbar-menu" id="navbarMenu" aria-hidden="true">
+                <li class="mobile-close" style="display:none; padding:8px 12px; justify-content:flex-end;">
+                    <button id="mobile-menu-close" class="navbar-btn" onclick="toggleMobileMenu()" aria-label="Fermer le menu"><i class="fas fa-times"></i></button>
+                </li>
                 <li><a href="#" onclick="showModal('accueil'); return false;"><i class="fas fa-home"></i> Accueil</a></li>
                 <li class="dropdown">
                     <a href="#"><i class="fas fa-search"></i> Requêtes</a>
@@ -1219,6 +1254,20 @@
                 <!-- Legend Tab -->
                 <div id="legend" class="tab-content active">
                     <div style="padding: 8px;" id="legendContent">
+                        <div class="legend-panel">
+                            <div class="legend-header">
+                                <div class="legend-title"><i class="fas fa-book"></i> Légende</div>
+                                <div class="legend-actions">
+                                    <input id="legendSearch" class="legend-search" placeholder="Filtrer la légende..." aria-label="Filtrer la légende">
+                                    <button id="legendPinBtn" class="navbar-btn legend-pin" title="Épingler la légende"><i class="fas fa-thumbtack"></i></button>
+                                    <button id="legendCollapseBtn" class="navbar-btn legend-collapse" title="Réduire/Agrandir"><i class="fas fa-chevron-up"></i></button>
+                                </div>
+                            </div>
+                            <div id="legendItems" class="legend-items" role="list" aria-label="Éléments de la légende">
+                                <!-- items injected JS -->
+                            </div>
+                            <div id="legendEmpty" class="legend-empty" style="display:none;">Aucun élément correspondant</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1231,6 +1280,9 @@
             <span>Lng: <span id="lng">-</span></span>
             <span>Zoom: <span id="zoom">-</span></span>
         </div>
+
+        <!-- Quick legend button (mobile) -->
+        <button id="openLegendBtn" class="navbar-btn" title="Légende" aria-label="Ouvrir la légende"><i class="fas fa-book"></i></button>
 
         <!-- Scale Panel -->
         <div class="scale-panel" id="scalePanel">
@@ -2014,14 +2066,22 @@
                 return;
             }
 
-            // Générer le HTML de la légende
+            // Générer le HTML de la légende (structure enrichie)
             let legendHTML = '';
             legendData.forEach(item => {
                 legendHTML += `
-                    <div class="legend-item">
-                        <input type="checkbox" id="toggle-${item.id}" checked style="margin-right: 8px; cursor: pointer;">
-                        <div class="legend-symbol" style="background-color: ${item.color}; width: 16px; height: 16px; border-radius: 2px;"></div>
-                        <label for="toggle-${item.id}" style="cursor: pointer; flex: 1;">${item.name}</label>
+                    <div class="legend-item" data-name="${item.name}" data-id="${item.id}" role="listitem">
+                        <div class="legend-left">
+                            <input type="checkbox" id="toggle-${item.id}" checked />
+                            <div class="legend-symbol" style="background-color: ${item.color}; width: 16px; height: 16px; border-radius: 3px;"></div>
+                        </div>
+                        <div class="legend-main">
+                            <label for="toggle-${item.id}">${item.name}</label>
+                            <div class="legend-meta">Éléments: <span class="legend-count">${getCountForLayer(item.layer)}</span></div>
+                        </div>
+                        <div class="legend-actions-item">
+                            <button class="info-btn" title="Zoom sur la couche" data-id="${item.id}"><i class="fas fa-search-location"></i></button>
+                        </div>
                     </div>
                 `;
             });
@@ -2033,14 +2093,17 @@
             setTimeout(() => {
                 legendData.forEach(item => {
                     const checkbox = document.getElementById(`toggle-${item.id}`);
+                    const infoBtn = document.querySelector(`.info-btn[data-id="${item.id}"]`);
+                    const label = document.querySelector(`label[for="toggle-${item.id}"]`);
+
                     if (checkbox) {
                         // Retirer tout écouteur existant
                         checkbox.removeEventListener('change', null);
-                        
+
                         // Ajouter le nouvel écouteur
                         checkbox.addEventListener('change', function(e) {
                             const isChecked = this.checked;
-                            
+
                             try {
                                 toggleLayerVisibility(item.id, item.layer, isChecked);
                             } catch(err) {
@@ -2048,9 +2111,227 @@
                             }
                         });
                     }
+
+                    if (label) {
+                        label.addEventListener('click', function(){
+                            if (checkbox) { checkbox.checked = !checkbox.checked; checkbox.dispatchEvent(new Event('change')); }
+                        });
+                    }
+
+                    if (infoBtn) {
+                        infoBtn.addEventListener('click', function(){
+                            try {
+                                const lyr = window[item.layer];
+                                if (lyr && typeof lyr.getBounds === 'function') {
+                                    map.fitBounds(lyr.getBounds());
+                                } else if (lyr && typeof lyr.getLayers === 'function' && lyr.getLayers().length>0) {
+                                    const first = lyr.getLayers()[0];
+                                    if (first && first.getLatLng) map.setView(first.getLatLng(), 12);
+                                } else {
+                                    alert('Zoom non disponible pour cette couche');
+                                }
+                            } catch(e) {
+                                console.warn('infoBtn error', e);
+                            }
+                        });
+                    }
                 });
                 console.debug('✓ Checkbox listeners attachés');
             }, 100);
+        }
+
+        // --- Legend enhancements: counts, filter, pin, collapse ---
+        function getCountForLayer(layerVar) {
+            try {
+                const l = window[layerVar];
+                if (!l) return '—';
+                if (typeof l.getLayers === 'function') {
+                    return l.getLayers().length;
+                }
+                // For GeoJSON-like objects
+                if (Array.isArray(l.features)) return l.features.length;
+                return '—';
+            } catch (e) { return '—'; }
+        }
+
+        function updateLegendCounts(){
+            legendData.forEach(item => {
+                const container = document.querySelector(`.legend-item[data-id="${item.id}"]`);
+                if (container) {
+                    const countEl = container.querySelector('.legend-count');
+                    if (countEl) countEl.textContent = getCountForLayer(item.layer);
+                }
+            });
+        }
+
+        function filterLegend(query){
+            const q = (query || '').trim().toLowerCase();
+            const items = document.querySelectorAll('#legendItems .legend-item');
+            let visible = 0;
+            items.forEach(it => {
+                const name = (it.getAttribute('data-name') || '').toLowerCase();
+                if (!q || name.indexOf(q) !== -1) { it.style.display='flex'; visible++; }
+                else it.style.display='none';
+            });
+            document.getElementById('legendEmpty').style.display = (visible === 0 ? 'block' : 'none');
+        }
+
+        function attachLegendSearchListener(){
+            const el = document.getElementById('legendSearch');
+            if (!el) return;
+            el.addEventListener('input', debounce(function(e){ filterLegend(e.target.value); }, 200));
+
+            const pinBtn = document.getElementById('legendPinBtn');
+            const collapseBtn = document.getElementById('legendCollapseBtn');
+            if (pinBtn) pinBtn.addEventListener('click', function(){
+                const sidebar = document.getElementById('sidebarRight');
+                if (!sidebar) return;
+                const isPinned = sidebar.classList.toggle('pinned');
+                this.classList.toggle('active', isPinned);
+                if (isPinned) {
+                    sidebar.style.position = 'fixed';
+                    sidebar.style.top = '70px';
+                    sidebar.style.right = '10px';
+                    sidebar.style.height = 'calc(100% - 140px)';
+                    sidebar.style.boxShadow = '0 10px 30px rgba(12,74,26,0.12)';
+                } else {
+                    sidebar.style.position = '';
+                    sidebar.style.top = '';
+                    sidebar.style.right = '';
+                    sidebar.style.height = '';
+                    sidebar.style.boxShadow = '';
+                }
+            });
+
+            if (collapseBtn) collapseBtn.addEventListener('click', function(){
+                const items = document.getElementById('legendItems');
+                if (!items) return;
+                if (items.style.display === 'none') { items.style.display='block'; this.innerHTML = '<i class="fas fa-chevron-up"></i>'; }
+                else { items.style.display = 'none'; this.innerHTML = '<i class="fas fa-chevron-down"></i>'; }
+            });
+        }
+
+        // --- Main search enhancements (navbar search) ---
+        function performSearch(query){
+            const q = (query || '').trim().toLowerCase();
+            const results = [];
+            if (!q) return results;
+
+            // Search legend layers
+            legendData.forEach(item => {
+                if (item.name.toLowerCase().indexOf(q) !== -1) {
+                    results.push({type:'layer', name:item.name, id:item.id, layer:item.layer});
+                }
+            });
+
+            // Search localities (if available)
+            try {
+                const cluster = window['cluster_localites_7'] || window['layer_localites_7'];
+                if (cluster && typeof cluster.getLayers === 'function') {
+                    const layers = cluster.getLayers();
+                    for (let i=0;i<layers.length && results.length < 12;i++){
+                        const lyr = layers[i];
+                        const name = (lyr.feature && lyr.feature.properties && (lyr.feature.properties['NOM'] || lyr.feature.properties['name'] || ''));
+                        if (name && name.toLowerCase().indexOf(q) !== -1) {
+                            // Get latlng
+                            let latlng = null;
+                            if (typeof lyr.getLatLng === 'function') latlng = lyr.getLatLng();
+                            else if (lyr.getBounds) latlng = lyr.getBounds().getCenter();
+                            results.push({type:'locality', name: name, layer: lyr, latlng: latlng});
+                        }
+                    }
+                }
+            } catch(e){ console.warn('performSearch localities', e); }
+
+            return results;
+        }
+
+        function renderSuggestions(results){
+            const container = document.getElementById('searchSuggestions');
+            container.innerHTML = '';
+            if (!results || results.length === 0) { container.style.display = 'none'; return; }
+            results.forEach(r => {
+                const div = document.createElement('div');
+                div.className = 'item';
+                const type = document.createElement('span'); type.className='type'; type.textContent = r.type === 'locality' ? 'Localité' : 'Couche';
+                const text = document.createElement('div'); text.style.flex = '1'; text.textContent = r.name;
+                div.appendChild(type);
+                div.appendChild(text);
+                div.addEventListener('click', function(){ handleSuggestionClick(r); container.style.display='none'; });
+                container.appendChild(div);
+            });
+            container.style.display = 'block';
+        }
+
+        function handleSuggestionClick(item){
+            if (!item) return;
+            if (item.type === 'locality'){
+                if (item.latlng) {
+                    map.setView([item.latlng.lat, item.latlng.lng], 15);
+                    try { if (item.layer && typeof item.layer.openPopup === 'function') item.layer.openPopup(); } catch(e){}
+                }
+            } else if (item.type === 'layer'){
+                // Ensure legend visible and checkbox checked
+                switchTab(null, 'legend');
+                const cb = document.getElementById(`toggle-${item.id}`);
+                if (cb && !cb.checked) cb.checked = true, cb.dispatchEvent(new Event('change'));
+                // Zoom to layer bounds if possible
+                const lyr = window[item.layer];
+                try {
+                    if (lyr && typeof lyr.getBounds === 'function') {
+                        map.fitBounds(lyr.getBounds());
+                    } else if (lyr && typeof lyr.getLayers === 'function' && lyr.getLayers().length>0) {
+                        const first = lyr.getLayers()[0];
+                        if (first && first.getLatLng) map.setView(first.getLatLng(), 12);
+                    }
+                } catch(e){ console.warn('zoomToLayer error', e); }
+            }
+        }
+
+        // Debounce helper
+        function debounce(fn, delay){ let t; return function(){ const args = arguments; clearTimeout(t); t = setTimeout(()=> fn.apply(this, args), delay); }; }
+
+        function enhanceMainSearch(){
+            const input = document.getElementById('mainSearch');
+            const sugg = document.getElementById('searchSuggestions');
+            if (!input) return;
+            input.addEventListener('input', debounce(function(e){ const res = performSearch(e.target.value); renderSuggestions(res); }, 220));
+            input.addEventListener('blur', function(){ setTimeout(()=>{ if (sugg) sugg.style.display='none'; }, 250); });
+            input.addEventListener('focus', function(){ const res = performSearch(input.value); renderSuggestions(res); });
+
+            // keyboard navigation
+            input.addEventListener('keydown', function(e){
+                const items = document.querySelectorAll('#searchSuggestions .item');
+                if(!items || items.length===0) return;
+                let idx = Array.from(items).findIndex(i => i.classList.contains('active'));
+                if (e.key === 'ArrowDown') { e.preventDefault(); if (idx < items.length-1) idx++; items.forEach(i=>i.classList.remove('active')); items[idx].classList.add('active'); }
+                else if (e.key === 'ArrowUp') { e.preventDefault(); if (idx > 0) idx--; items.forEach(i=>i.classList.remove('active')); items[idx].classList.add('active'); }
+                else if (e.key === 'Enter') { e.preventDefault(); const sel = document.querySelector('#searchSuggestions .item.active'); if (sel) sel.click(); }
+            });
+        }
+
+        // Open quick legend on mobile
+        const openLegendBtn = document.getElementById('openLegendBtn');
+        if (openLegendBtn) {
+            openLegendBtn.addEventListener('click', function(){
+                if (window.innerWidth <= 768) {
+                    const left = document.getElementById('sidebarLeft');
+                    const right = document.getElementById('sidebarRight');
+                    if (right && right.classList.contains('collapsed')) right.classList.remove('collapsed');
+                    switchTab(null, 'legend');
+                } else {
+                    // desktop -> just open right sidebar
+                    const right = document.getElementById('sidebarRight'); if (right && right.classList.contains('collapsed')) right.classList.remove('collapsed'); switchTab(null,'legend');
+                }
+            });
+        }
+
+        function setupLegendUI(){
+            attachLegendSearchListener();
+            updateLegendCounts();
+            enhanceMainSearch();
+            // render counts periodically to update dynamic layers
+            setInterval(updateLegendCounts, 4000);
         }
 
         // Toggle layer visibility from legend
@@ -2111,6 +2392,7 @@
 
         // Initialize legend
         initializeLegend();
+        setupLegendUI();
 
         // Initialize layers panel
         setTimeout(function() {
@@ -3445,6 +3727,53 @@
         window.addEventListener('appinstalled', (evt) => {
           console.log('App installed');
           if (installBtn) installBtn.style.display = 'none';
+        });
+
+        // Mobile menu toggling and responsive adjustments
+        function toggleMobileMenu(){
+          const menu = document.getElementById('navbarMenu');
+          const btnClose = document.getElementById('mobile-menu-close');
+          if(!menu) return;
+          if(menu.classList.contains('mobile-open')){
+            menu.classList.remove('mobile-open');
+            document.body.classList.remove('mobile-menu-open');
+            if(btnClose) btnClose.style.display = 'none';
+            menu.setAttribute('aria-hidden','true');
+          } else {
+            menu.classList.add('mobile-open');
+            document.body.classList.add('mobile-menu-open');
+            if(btnClose) btnClose.style.display = 'inline-flex';
+            menu.setAttribute('aria-hidden','false');
+          }
+        }
+
+        function adjustForScreenSize() {
+          const left = document.getElementById('sidebarLeft');
+          const right = document.getElementById('sidebarRight');
+          if (window.innerWidth <= 768) {
+            if (left && !left.classList.contains('collapsed')) left.classList.add('collapsed');
+            if (right && !right.classList.contains('collapsed')) right.classList.add('collapsed');
+            const install = document.getElementById('install-btn');
+            if (install) install.style.display = 'inline-flex';
+          } else {
+            if (left && left.classList.contains('collapsed')) left.classList.remove('collapsed');
+            if (right && right.classList.contains('collapsed')) right.classList.remove('collapsed');
+            const install = document.getElementById('install-btn');
+            if (install) install.style.display = 'none';
+          }
+          if (window.map && typeof window.map.invalidateSize === 'function') {
+            setTimeout(function(){ window.map.invalidateSize(); }, 350);
+          }
+        }
+
+        window.addEventListener('load', adjustForScreenSize);
+        window.addEventListener('resize', adjustForScreenSize);
+        document.addEventListener('click', function(e){
+          const menu = document.getElementById('navbarMenu');
+          const btn = document.getElementById('mobile-menu-btn');
+          if(menu && btn && menu.classList.contains('mobile-open') && !menu.contains(e.target) && !btn.contains(e.target)){
+            menu.classList.remove('mobile-open');
+          }
         });
         </script>
     </body>

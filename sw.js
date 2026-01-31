@@ -5,7 +5,10 @@ const URLS_TO_CACHE = [
   '/css/leaflet.css',
   '/css/qgis2web.css',
   '/js/leaflet.js',
-  '/images/search-icon.png'
+  '/images/search-icon.png',
+  '/images/icon-192.png',
+  '/images/icon-512.png',
+  '/images/apple-touch-icon.png'
 ];
 
 self.addEventListener('install', (event) => {

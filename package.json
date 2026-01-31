@@ -1,0 +1,11 @@
+{
+  "name": "sig_senegal_assets",
+  "version": "1.0.0",
+  "description": "Utilities to generate app icons for SIG Sénégal PWA",
+  "scripts": {
+    "generate-icons": "node scripts/generate-icons.js"
+  },
+  "devDependencies": {
+    "sharp": "^0.32.0"
+  }
+}
